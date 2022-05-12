@@ -1,0 +1,19 @@
+{
+  "name": "bau-capstone-1010168-controller",
+  "version": "1.0.0",
+  "description": "Bahcesehir University Capstone Project 1010168 Controller (Server)",
+  "type": "module",
+  "scripts": {
+    
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emreon/bau-capstone-1010168-controller.git"
+  },
+  "author": "Emre",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/emreon/bau-capstone-1010168-controller/issues"
+  },
+  "homepage": "https://github.com/emreon/bau-capstone-1010168-controller#readme"
+}
