@@ -1,0 +1,37 @@
+:root {
+    --header-height: 65px;
+    --frame-panel-col: 8;
+}
+
+body {
+    height: 100vh;
+    overflow: hidden;
+}
+
+body > header {
+    height: var(--header-height);
+}
+
+body > main {
+    height: calc(100% - var(--header-height));
+}
+
+#camera-overlay {
+    position: absolute;
+    padding-left: 20px;
+    width: calc(100% * (var(--frame-panel-col) / 12));
+    height: calc(100% - var(--header-height));
+}
+
+#camera {
+    object-fit: contain;
+}
+
+#camera[data-camera='off'] {
+    content: url('offline.svg');
+    width: 200px;
+}
+
+#camera[data-camera='on'] {
+    /* width: auto; */
+}

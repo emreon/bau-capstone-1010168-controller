@@ -9,23 +9,14 @@ let retryTimeoutId = -1;
 // -------- HTTP SERVER --------
 
 server.on('request', (req, res) => {
-    console.log(`[HTTP] "${req.socket.remoteAddress}" ${req.method} ${req.headers.host}${req.url}`);
-    switch (req.url) {
-        case '/':
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('Hello World!');
-            res.end();
-            break;
-        default:
-            res.statusCode = 404;
-            res.setHeader('Content-Type', 'text/html');
-            res.end();
-            break;
-    }
+    console.log(`[HTTP] "${req.socket.remoteAddress}" ${req.method} ${req.headers.host}${req.url} --> 404`);
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'text/plain');
+    res.end('404 Not Found');
 });
 
 server.on('listening', () => console.log(`[HTTP] Server is listening on ${HOSTNAME}:${PORT}`));
-server.on('close', () => console.log('[HTTP] Server is closed.'));
+server.on('close', () => console.log('[HTTP] Server is closed'));
 server.on('error', (e) => {
     if (e.code === 'EADDRINUSE') {
         console.log(`[HTTP] Port "${PORT}" is in use. Retrying...`);
@@ -42,149 +33,162 @@ server.listen(PORT, HOSTNAME);
 
 // -------- WEBSOCKET SERVER --------
 
-const wss = new WebSocketServer({ server });
+const MAX_FPS = 30;
+const CLIENT_UNKNOWN = '❓';
+const CLIENT_ROBOT = '🤖';
+const CLIENT_CONTROLLER = '🧠';
 const td = new TextDecoder();
+const wss = new WebSocketServer({ server });
 
-wss.robot = null;
-wss.controllers = new Set();
+let targetFPS = MAX_FPS;
+let frameId = 0;
+let bufSize = 0;
+let robot = null;
+let controllers = new Set();
+
+function setRobot(ws) {
+    if (robot) robot.terminate();
+
+    frameId = 0;
+    ws.type = CLIENT_ROBOT;
+    robot = ws;
+    if (controllers.size > 0) {
+        ws.sendMessage({ type: 'start', targetFPS });
+        controllers.forEach((c) => {
+            c.ackFrames = 0;
+            c.frameOffset = 0;
+        });
+    }
+}
+
+function unsetRobot() {
+    robot = null;
+}
+
+function addController(ws) {
+    ws.type = CLIENT_CONTROLLER;
+    ws.ackIntervalId = setInterval(() => {
+        if (!robot) return;
+        if (ws.isStopped) return;
+
+        const kbitps = Math.ceil((bufSize * 8) / 1000);
+        const mbitps = kbitps / 1000;
+        console.log('Bandwidth:', kbitps, 'kbit/s', mbitps, 'mbit/s');
+        bufSize = 0;
+
+        const ack = ws.ackFrames + ws.frameOffset;
+        const realLag = frameId - ack;
+        const lag = Math.max(realLag - ws.lagOffset, 0);
+        // console.log('Frame Id:', frameId, ' ACK:', ack, ' Lag:', lag);
+
+        if (lag > targetFPS * 2) {
+            targetFPS = Math.floor(targetFPS / 2);
+            ws.lagOffset = realLag;
+
+            console.warn('[WS] Target FPS:', targetFPS);
+
+            if (targetFPS === 1) {
+                console.warn('[WS] Client is too slow!');
+                robot.sendMessage('stop');
+                ws.isStopped = true;
+            } else {
+                ws.sendMessage('reset');
+                robot.sendMessage({ type: 'fps', targetFPS });
+            }
+        }
+    }, 1000);
+
+    const shouldStart = controllers.size < 1;
+    controllers.add(ws);
+
+    if (shouldStart && robot) robot.sendMessage({ type: 'start', targetFPS });
+}
+
+function removeController(ws) {
+    clearInterval(ws.ackIntervalId);
+    controllers.delete(ws);
+    if (controllers.size < 1) ws.sendMessage('stop');
+}
 
 wss.on('listening', () => {
     console.log('[WSS] Server is listening');
 });
 
-// ws.ping(null, false, (error) => console.log('ws ping cb: ', error));
-// ws.send('hello', (error) => console.log('ws message cb:', error));
 wss.on('connection', (ws, req) => {
-    console.log(`[WSS] Client connected from "${req.socket.remoteAddress}" Total: ${wss.clients.size}`);
+    console.log(`[WSS] Client connected from "${req.socket.remoteAddress}" | Total: ${wss.clients.size}`);
 
-    ws.type = '❓';
-    ws.sendMessage = (msg, cb) => {
+    ws.type = CLIENT_UNKNOWN;
+    ws.ackFrames = 0;
+    ws.frameOffset = frameId;
+    ws.lagOffset = 0;
+    ws.isStopped = false;
+    ws.sendMessage = (msg) => {
         const msgStr = JSON.stringify(msg);
         ws.send(msgStr);
     };
 
-    // ws.ppp = Date.now();
-    // ws.ping();
-
-    // setTimeout(() => {
-    //     fs.readFile('test.jpg').then((imgBuf) => {
-    //         console.log(new Date(), 'send test.jpg', byteSize(imgBuf.length).toString());
-    //         // ws.send(imgBuf, (err) => console.log('send test.jpg cb:', err));
-    //         ws.send(imgBuf);
-    //     });
-    // }, 1);
-
     ws.on('message', (data, isBinary) => {
+        // BINARY MESSAGE (Handle Incoming Frame)
         if (isBinary) {
-            handleFrameBuffer(ws, data);
-        } else {
+            if (!ws.type === CLIENT_ROBOT) return;
+            // console.log(`[WS] ${ws.type} New Frame: ${byteSize(data.length).toString()}`);
+
+            if (controllers.size < 1) {
+                ws.sendMessage('stop');
+                return;
+            }
+
+            frameId++;
+            bufSize += data.length;
+            controllers.forEach((c) => {
+                if (!c.isStopped) c.send(data);
+            });
+        }
+
+        // TEXT MESSAGE
+        else {
             const msgStr = td.decode(data);
             const msg = JSON.parse(msgStr);
-            handleMessage(ws, msg);
+
+            if (ws.type === CLIENT_UNKNOWN && msg === CLIENT_ROBOT) setRobot(ws);
+            else if (ws.type === CLIENT_UNKNOWN && msg === CLIENT_CONTROLLER) addController(ws);
+            else if (ws.type === CLIENT_CONTROLLER && msg === '🎞️') ws.ackFrames++;
         }
     });
 
     ws.on('ping', (data) => {
-        console.log(`[WS ${ws.type}] Ping:`, data);
+        console.log(`[WS] ${ws.type} Ping:`, data);
     });
 
     ws.on('pong', (data) => {
-        console.log(`[WS ${ws.type}] Pong:`, data);
+        console.log(`[WS] ${ws.type} Pong:`, data);
     });
 
     ws.on('error', (error) => {
-        console.error(`[WS ${ws.type}] Error:`, error);
+        console.error(`[WS] ${ws.type} Error:`, error);
     });
 
     ws.on('close', (code, reason) => {
-        console.log('[WS] Client Connection closed:', code, reason);
-        if (ws.type === '🧠') {
-            wss.controllers.delete(ws);
-        } else if (ws.type === '🤖') {
-            wss.robot = null;
-        }
+        console.log(
+            `[WS] ${ws.type} Connection is closed | Total: ${wss.clients.size}`,
+            '| Code:',
+            code,
+            '| Reason:',
+            reason
+        );
+
+        if (ws.type === CLIENT_CONTROLLER) removeController(ws);
+        else if (ws.type === CLIENT_ROBOT) unsetRobot();
     });
 });
 
 wss.on('error', (error) => {
-    console.error('[WSS]', error);
+    console.error('[WSS] Error:', error);
 });
 
 wss.on('close', () => {
     console.log('[WSS] Server is closed');
 });
-
-function handleMessage(ws, msg) {
-    // console.log(`[WS ${ws.type}] Message:`, msg);
-
-    if (msg === '🤖') {
-        ws.type = '🤖';
-        wss.robot = ws;
-        wss.controllers.delete(ws);
-        if (wss.controllers.size > 0) {
-            ws.sendMessage('start');
-        }
-    } else if (msg === '🧠') {
-        ws.type = '🧠';
-        const shouldStart = wss.controllers.size < 1;
-        wss.controllers.add(ws);
-
-        if (shouldStart) {
-            wss.robot?.sendMessage('start');
-        }
-    }
-}
-
-function handleFrameBuffer(ws, frameBuffer) {
-    if (wss.robot && ws !== wss.robot) return;
-    // console.log(`[WS ${ws.type}] New Frame Buffer: ${byteSize(frameBuffer.length).toString()}`);
-
-    if (wss.controllers.size < 1) {
-        ws.sendMessage('stop');
-        return;
-    }
-
-    wss.controllers.forEach((c) => {
-        c.send(frameBuffer);
-    });
-}
-
-// // ws.sendingFrameBuffer = false
-// ws.chunkIndex = 0;
-// ws.frameStream = fs.createReadStream('test.jpg', { highWaterMark: 10_000 });
-// ws.frameStream.on('data', (chunk) => {
-//     ws.send(chunk, { binary: true }, (err) => {
-//         console.log('chunk', ws.chunkIndex, err);
-//         ws.chunkIndex++;
-//     });
-// });
-
-// // ws.frameStream.on('readable', () => {
-// //     if(!ws.sendingFrameBuffer){
-// //         ws.send(stream.read(), (err) => {
-// //             if(err){
-// //                 console.error(err)
-// //                 ws.frameStream.close()
-// //                 ws.close()
-// //             }
-// //             else{
-// //                 console.log('Image Buffer chunk sent.')
-// //                 ws.sendingFrameBuffer = false
-// //             }
-// //         })
-// //     }
-// //     console.log('readable');
-// //     if (i != 0) return;
-// //     console.log(stream.read());
-// //     i++;
-// // });
-// ws.frameStream.on('end', () => {
-//     console.log('frame stream ended');
-//     ws.send('end');
-// });
-
-// // const blob = new Blob(['Hello World'], { type: 'text/plain' });
-// // ws.send(blob, { binary: true });
 
 // -------- HANDLE PROCESS EXIT SIGNALS --------
 
