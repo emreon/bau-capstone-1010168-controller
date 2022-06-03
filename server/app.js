@@ -1,18 +1,24 @@
 import http from 'node:http';
+import serveStatic from 'serve-static';
 import { WebSocketServer } from 'ws';
 
 const HOSTNAME = '0.0.0.0';
-const PORT = 8888;
+const PORT = process.env.PORT || 8888;
 const server = http.createServer();
 let retryTimeoutId = -1;
 
-// -------- HTTP SERVER --------
+// ---------------- HTTP SERVER ----------------
+
+const serve = serveStatic('client', { index: 'index.html' });
 
 server.on('request', (req, res) => {
-    console.log(`[HTTP] "${req.socket.remoteAddress}" ${req.method} ${req.headers.host}${req.url} --> 404`);
-    res.statusCode = 404;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('404 Not Found');
+    console.log(`[HTTP] "${req.socket.remoteAddress}" ${req.method} ${req.headers.host}${req.url}`);
+
+    serve(req, res, () => {
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'text/plain');
+        res.end('404 Not Found');
+    });
 });
 
 server.on('listening', () => console.log(`[HTTP] Server is listening on ${HOSTNAME}:${PORT}`));
@@ -31,7 +37,7 @@ server.on('error', (e) => {
 
 server.listen(PORT, HOSTNAME);
 
-// -------- WEBSOCKET SERVER --------
+// ---------------- WEBSOCKET SERVER ----------------
 
 const MAX_FPS = 30;
 const CLIENT_UNKNOWN = '❓';
@@ -190,7 +196,7 @@ wss.on('close', () => {
     console.log('[WSS] Server is closed');
 });
 
-// -------- HANDLE PROCESS EXIT SIGNALS --------
+// ---------------- HANDLE PROCESS EXIT SIGNALS ----------------
 
 function exit(msg) {
     console.log(msg);

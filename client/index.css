@@ -1,6 +1,5 @@
 :root {
     --header-height: 65px;
-    --frame-panel-col: 8;
 }
 
 body {
@@ -16,15 +15,32 @@ body > main {
     height: calc(100% - var(--header-height));
 }
 
-#camera-overlay {
-    position: absolute;
-    padding-left: 20px;
-    width: calc(100% * (var(--frame-panel-col) / 12));
-    height: calc(100% - var(--header-height));
+.navbar-brand {
+    user-select: none;
 }
 
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    /* box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3); */
+}
+
+::-webkit-scrollbar-thumb {
+    /* background-color: darkgrey; */
+    /* outline: 1px solid slategrey; */
+    background-color: dodgerblue;
+    border: 2px solid dodgerblue;
+    border-radius: 8px;
+}
+
+/* -------------------------------- Camera Panel -------------------------------- */
+
 #camera {
+    user-select: none;
     object-fit: contain;
+    cursor: crosshair;
 }
 
 #camera[data-camera='off'] {
@@ -32,6 +48,105 @@ body > main {
     width: 200px;
 }
 
-#camera[data-camera='on'] {
-    /* width: auto; */
+#camera-panel {
+    padding-left: 32px !important;
+    padding-right: 16px !important;
+}
+
+#camera-panel-overlay {
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    position: absolute;
+    width: 0px;
+    height: 0px;
+}
+
+#camera-overlay {
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    position: absolute;
+    width: 0px;
+    height: 0px;
+}
+
+#pos-container {
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+}
+
+.posmm {
+    color: tomato;
+}
+
+.pos {
+    color: dodgerblue;
+}
+
+/* -------------------------------- Pointer & Workspace -------------------------------- */
+#pointer-x {
+    background-color: firebrick;
+    position: absolute;
+    width: 100vw;
+    height: 3px;
+    left: 0px;
+    top: 30vh;
+}
+
+#pointer-y {
+    background-color: firebrick;
+    position: absolute;
+    width: 3px;
+    height: 100vh;
+    left: 20vw;
+    top: 0px;
+}
+
+#workspace {
+    border: 3px solid dodgerblue;
+    position: absolute;
+}
+
+/* -------------------------------- Control Panel -------------------------------- */
+#control-panel {
+    padding-left: 16px;
+    padding-right: 32px;
+    overflow-y: scroll;
+    height: 100%;
+}
+
+/* -------------------------------- Detected Object Colors -------------------------------- */
+/* Unknown Color */
+#objects button.list-group-item[data-color='?']:is(.active) {
+    background-color: gray;
+    border-color: gray;
+}
+
+/* RED */
+#objects button.list-group-item[data-color='Red']:not(.active) .object-color {
+    color: firebrick;
+}
+#objects button.list-group-item[data-color='Red']:is(.active) {
+    background-color: firebrick;
+    border-color: firebrick;
+}
+
+/* GREEN */
+#objects button.list-group-item[data-color='Green']:not(.active) .object-color {
+    color: seagreen;
+}
+#objects button.list-group-item[data-color='Green']:is(.active) {
+    background-color: seagreen;
+    border-color: seagreen;
+}
+
+/* BLUE */
+#objects button.list-group-item[data-color='Blue']:not(.active) .object-color {
+    color: dodgerblue;
+}
+#objects button.list-group-item[data-color='Blue']:is(.active) {
+    background-color: dodgerblue;
+    border-color: dodgerblue;
 }

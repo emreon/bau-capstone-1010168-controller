@@ -4,7 +4,8 @@
     "description": "Bahcesehir University Capstone Project 1010168 Controller (Server)",
     "type": "module",
     "scripts": {
-        "server": "node ./server/main.js",
+        "start": "nodemon server/app.js",
+        "server": "node ./server/app.js",
         "client": "live-server ./client --port=8080 --host=127.0.0.1"
     },
     "repository": {
@@ -20,7 +21,10 @@
     "dependencies": {
         "byte-size": "^8.1.0",
         "live-server": "^1.2.2",
+        "serve-static": "^1.15.0",
         "ws": "^8.6.0"
     },
-    "devDependencies": {}
+    "devDependencies": {
+        "nodemon": "^2.0.16"
+    }
 }
