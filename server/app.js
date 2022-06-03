@@ -9,6 +9,7 @@ let retryTimeoutId = -1;
 
 // ---------------- HTTP SERVER ----------------
 
+// https://devcenter.heroku.com/articles/procfile
 const serve = serveStatic('client', { index: 'index.html' });
 
 server.on('request', (req, res) => {

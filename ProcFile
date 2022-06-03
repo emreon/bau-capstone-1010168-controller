@@ -1,3 +1,1 @@
-# https://devcenter.heroku.com/articles/procfile
-
 web: node server/app.js
