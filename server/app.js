@@ -16,6 +16,10 @@ let retryTimeoutId = -1;
 // https://devcenter.heroku.com/articles/nodejs-support
 // heroku logs -a bau-capstone-1010168-controller --tail
 
+// https://pm2.keymetrics.io/docs/usage/application-declaration/
+// https://pm2.keymetrics.io/docs/usage/signals-clean-restart/
+// https://pm2.keymetrics.io/docs/usage/startup/
+
 // https://github.com/expressjs/serve-static
 const serve = serveStatic('client', { index: 'index.html' });
 
@@ -79,6 +83,7 @@ function setRobot(ws) {
 
 function unsetRobot() {
     robot = null;
+    targetFPS = MAX_FPS;
 }
 
 function addController(ws) {
@@ -123,7 +128,10 @@ function addController(ws) {
 function removeController(ws) {
     clearInterval(ws.ackIntervalId);
     controllers.delete(ws);
-    if (controllers.size < 1) ws.sendMessage('stop');
+    if (controllers.size < 1) {
+        ws.sendMessage('stop');
+        targetFPS = MAX_FPS;
+    }
 }
 
 wss.on('listening', () => {
