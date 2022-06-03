@@ -13,6 +13,9 @@ let retryTimeoutId = -1;
 // https://devcenter.heroku.com/articles/procfile
 // https://devcenter.heroku.com/articles/deploying-nodejs
 // https://devcenter.heroku.com/articles/nodejs-support
+// heroku logs -a bau-capstone-1010168-controller --tail
+
+// https://github.com/expressjs/serve-static
 const serve = serveStatic('client', { index: 'index.html' });
 
 server.on('request', (req, res) => {
@@ -48,6 +51,8 @@ const CLIENT_UNKNOWN = '❓';
 const CLIENT_ROBOT = '🤖';
 const CLIENT_CONTROLLER = '🧠';
 const td = new TextDecoder();
+
+// https://github.com/websockets/ws
 const wss = new WebSocketServer({ server });
 
 let targetFPS = MAX_FPS;
@@ -141,6 +146,7 @@ wss.on('connection', (ws, req) => {
         // BINARY MESSAGE (Handle Incoming Frame)
         if (isBinary) {
             if (!ws.type === CLIENT_ROBOT) return;
+            // https://github.com/75lb/byte-size
             // console.log(`[WS] ${ws.type} New Frame: ${byteSize(data.length).toString()}`);
 
             if (controllers.size < 1) {

@@ -382,10 +382,11 @@
 
         <!-- Web Socket -->
         <script>
-            console.debug('[WS] Connecting to the server...');
-            const WS_ADDR = `ws://${location.hostname}:8888`;
+            // https://developer.mozilla.org/en-US/docs/Web/API/Location
+            const WS_ADDR = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`;
             const td = new TextDecoder();
 
+            console.debug('[WS] Connecting to the server...');
             const ws = new WebSocket(WS_ADDR);
             ws.binaryType = 'arraybuffer';
 
