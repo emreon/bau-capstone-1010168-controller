@@ -25,5 +25,8 @@
         "serve-static": "^1.15.0",
         "ws": "^8.6.0"
     },
-    "devDependencies": {}
+    "devDependencies": {},
+    "engines": {
+        "node": "16.x"
+    }
 }
