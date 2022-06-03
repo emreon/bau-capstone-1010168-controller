@@ -94,7 +94,7 @@ function addController(ws) {
 
         const kbitps = Math.ceil((bufSize * 8) / 1000);
         const mbitps = kbitps / 1000;
-        console.log('Bandwidth:', kbitps, 'kbit/s', mbitps, 'mbit/s');
+        if (process.env.NODE_ENV === 'development') console.log('Bandwidth:', kbitps, 'kbit/s', mbitps, 'mbit/s');
         bufSize = 0;
 
         const ack = ws.ackFrames + ws.frameOffset;
