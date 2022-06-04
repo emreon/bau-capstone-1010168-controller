@@ -4,9 +4,9 @@
     "description": "Bahcesehir University Capstone Project 1010168 Controller (Server)",
     "type": "module",
     "scripts": {
-        "start": "nodemon server/app.js",
-        "server": "node ./server/app.js",
-        "client": "live-server ./client --port=8080 --host=127.0.0.1"
+        "start": "nodemon src/app.js",
+        "server": "node src/app.js",
+        "client": "live-server public --port=8080 --host=127.0.0.1"
     },
     "repository": {
         "type": "git",
@@ -17,16 +17,15 @@
     "bugs": {
         "url": "https://github.com/emreon/bau-capstone-1010168-controller/issues"
     },
-    "homepage": "https://github.com/emreon/bau-capstone-1010168-controller#readme",
+    "homepage": "https://bau-capstone-1010168.herokuapp.com/",
+    "engines": {
+        "node": "16.x"
+    },
     "dependencies": {
         "byte-size": "^8.1.0",
         "live-server": "^1.2.2",
         "nodemon": "^2.0.16",
         "serve-static": "^1.15.0",
         "ws": "^8.6.0"
-    },
-    "devDependencies": {},
-    "engines": {
-        "node": "16.x"
     }
 }

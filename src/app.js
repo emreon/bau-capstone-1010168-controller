@@ -21,7 +21,7 @@ let retryTimeoutId = -1;
 // https://pm2.keymetrics.io/docs/usage/startup/
 
 // https://github.com/expressjs/serve-static
-const serve = serveStatic('client', { index: 'index.html' });
+const serve = serveStatic('public', { index: 'index.html' });
 
 server.on('request', (req, res) => {
     console.log(`[HTTP] "${req.socket.remoteAddress}" ${req.method} ${req.headers.host}${req.url}`);
