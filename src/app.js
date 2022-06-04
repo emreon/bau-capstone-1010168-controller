@@ -41,7 +41,7 @@ server.on('error', (e) => {
         retryTimeoutId = setTimeout(() => {
             server.close();
             server.listen(PORT, HOSTNAME);
-        }, 1000);
+        }, 3000);
     } else {
         console.error(e);
     }

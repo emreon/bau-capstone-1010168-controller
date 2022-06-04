@@ -141,6 +141,7 @@
                 </div>
             </div>
         </main>
+
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
@@ -282,6 +283,17 @@
                 }
 
                 const img = document.getElementById('camera');
+
+                img.addEventListener('mouseenter', () => {
+                    document.getElementById('pointer-x').style.display = 'block';
+                    document.getElementById('pointer-y').style.display = 'block';
+                });
+
+                img.addEventListener('mouseleave', () => {
+                    document.getElementById('pointer-x').style.display = 'none';
+                    document.getElementById('pointer-y').style.display = 'none';
+                });
+
                 img.addEventListener('mousemove', (e) => {
                     // if (img.dataset.camera !== 'on') return
 
