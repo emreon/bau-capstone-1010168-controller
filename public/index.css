@@ -37,6 +37,12 @@ body > main {
 
 /* -------------------------------- Camera Panel -------------------------------- */
 
+#iksolver {
+    height: 100%;
+    margin-bottom: 32px;
+    background-color: ghostwhite;
+}
+
 #camera {
     user-select: none;
     object-fit: contain;

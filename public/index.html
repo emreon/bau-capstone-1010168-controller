@@ -41,14 +41,19 @@
                             </span>
                         </p>
                     </div>
+
                     <!-- Camera Overlay -->
                     <div id="camera-overlay">
                         <div id="pointer-x"></div>
                         <div id="pointer-y"></div>
                         <div id="workspace"></div>
                     </div>
+
                     <!-- Camera Image -->
                     <img id="camera" draggable="false" class="mw-100 mh-100 align-self-center" data-camera="off" />
+
+                    <!-- IK Solver -->
+                    <!-- <iframe id="iksolver" src="http://127.0.0.1:5500/src/iksolver.html" title="IK Solver"></iframe> -->
                 </div>
                 <!-- Control Panel -->
                 <div id="control-panel" class="col">
@@ -411,6 +416,7 @@
             ws.onopen = (e) => {
                 console.debug(`[WS] Connected to "${WS_ADDR}"`, e);
                 ws.sendMessage('🧠');
+                ws.sendMessage('🎞️');
             };
 
             ws.onmessage = (e) => {

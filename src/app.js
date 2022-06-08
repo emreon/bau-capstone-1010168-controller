@@ -60,7 +60,7 @@ const td = new TextDecoder();
 // https://github.com/websockets/ws
 const wss = new WebSocketServer({ server });
 
-let targetFPS = MAX_FPS;
+// let targetFPS = MAX_FPS;
 let frameId = 0;
 let bufSize = 0;
 let robot = null;
@@ -72,66 +72,73 @@ function setRobot(ws) {
     frameId = 0;
     ws.type = CLIENT_ROBOT;
     robot = ws;
-    if (controllers.size > 0) {
-        ws.sendMessage({ type: 'start', targetFPS });
-        controllers.forEach((c) => {
-            c.ackFrames = 0;
-            c.frameOffset = 0;
-        });
-    }
+
+    const controllersArr = [...controllers];
+    controllersArr.forEach((c) => (c.ack = false));
+    robot?.sendMessage('🎞️');
 }
 
 function unsetRobot() {
     robot = null;
-    targetFPS = MAX_FPS;
+
+    const controllersArr = [...controllers];
+    controllersArr.forEach((c) => (c.ack = false));
 }
 
 function addController(ws) {
     ws.type = CLIENT_CONTROLLER;
-    ws.ackIntervalId = setInterval(() => {
-        if (!robot) return;
-        if (ws.isStopped) return;
-
-        const kbitps = Math.ceil((bufSize * 8) / 1000);
-        const mbitps = kbitps / 1000;
-        if (process.env.NODE_ENV === 'development') console.log('Bandwidth:', kbitps, 'kbit/s', mbitps, 'mbit/s');
-        bufSize = 0;
-
-        const ack = ws.ackFrames + ws.frameOffset;
-        const realLag = frameId - ack;
-        const lag = Math.max(realLag - ws.lagOffset, 0);
-        // console.log('Frame Id:', frameId, ' ACK:', ack, ' Lag:', lag);
-
-        if (lag > targetFPS * 2) {
-            targetFPS = Math.floor(targetFPS / 2);
-            ws.lagOffset = realLag;
-
-            console.warn('[WS] Target FPS:', targetFPS);
-
-            if (targetFPS === 1) {
-                console.warn('[WS] Client is too slow!');
-                robot.sendMessage('stop');
-                ws.isStopped = true;
-            } else {
-                ws.sendMessage('reset');
-                robot.sendMessage({ type: 'fps', targetFPS });
-            }
-        }
-    }, 1000);
-
-    const shouldStart = controllers.size < 1;
     controllers.add(ws);
 
-    if (shouldStart && robot) robot.sendMessage({ type: 'start', targetFPS });
+    // ws.ackIntervalId = setInterval(() => {
+    //     if (!robot) return;
+    //     if (ws.isStopped) return;
+
+    //     const kbitps = Math.ceil((bufSize * 8) / 1000);
+    //     const mbitps = kbitps / 1000;
+    //     if (process.env.NODE_ENV === 'development') console.log('Bandwidth:', kbitps, 'kbit/s', mbitps, 'mbit/s');
+    //     bufSize = 0;
+
+    //     const ack = ws.ackFrames + ws.frameOffset;
+    //     const realLag = frameId - ack;
+    //     const lag = Math.max(realLag - ws.lagOffset, 0);
+    //     // console.log('Frame Id:', frameId, ' ACK:', ack, ' Lag:', lag);
+
+    //     if (lag > targetFPS * 2) {
+    //         targetFPS = Math.floor(targetFPS / 2);
+    //         ws.lagOffset = realLag;
+
+    //         console.warn('[WS] Target FPS:', targetFPS);
+
+    //         if (targetFPS === 1) {
+    //             console.warn('[WS] Client is too slow!');
+    //             robot.sendMessage('stop');
+    //             ws.isStopped = true;
+    //         } else {
+    //             ws.sendMessage('reset');
+    //             robot.sendMessage({ type: 'fps', targetFPS });
+    //         }
+    //     }
+    // }, 1000);
+
+    // const shouldStart = controllers.size < 1;
+    // controllers.add(ws);
+
+    // if (shouldStart && robot) robot.sendMessage({ type: 'start', targetFPS });
 }
 
 function removeController(ws) {
-    clearInterval(ws.ackIntervalId);
     controllers.delete(ws);
-    if (controllers.size < 1) {
-        ws.sendMessage('stop');
-        targetFPS = MAX_FPS;
-    }
+
+    const controllersArr = [...controllers];
+    const ack = controllersArr.reduce((ack, c) => ack && c.ack, true);
+    if (ack) robot?.sendMessage('🎞️');
+
+    // clearInterval(ws.ackIntervalId);
+
+    // if (controllers.size < 1) {
+    //     ws.sendMessage('stop');
+    //     targetFPS = MAX_FPS;
+    // }
 }
 
 wss.on('listening', () => {
@@ -142,10 +149,12 @@ wss.on('connection', (ws, req) => {
     console.log(`[WSS] Client connected from "${req.socket.remoteAddress}" | Total: ${wss.clients.size}`);
 
     ws.type = CLIENT_UNKNOWN;
-    ws.ackFrames = 0;
-    ws.frameOffset = frameId;
-    ws.lagOffset = 0;
-    ws.isStopped = false;
+    ws.ack = false;
+    // ws.ackFrames = 0;
+    // ws.frameOffset = frameId;
+    // ws.lagOffset = 0;
+    // ws.isStopped = false;
+
     ws.sendMessage = (msg) => {
         const msgStr = JSON.stringify(msg);
         ws.send(msgStr);
@@ -158,16 +167,9 @@ wss.on('connection', (ws, req) => {
             // https://github.com/75lb/byte-size
             // console.log(`[WS] ${ws.type} New Frame: ${byteSize(data.length).toString()}`);
 
-            if (controllers.size < 1) {
-                ws.sendMessage('stop');
-                return;
-            }
-
             frameId++;
             bufSize += data.length;
-            controllers.forEach((c) => {
-                if (!c.isStopped) c.send(data);
-            });
+            controllers.forEach((c) => c.send(data));
         }
 
         // TEXT MESSAGE
@@ -175,9 +177,20 @@ wss.on('connection', (ws, req) => {
             const msgStr = td.decode(data);
             const msg = JSON.parse(msgStr);
 
+            // TTPE: ROBOT
             if (ws.type === CLIENT_UNKNOWN && msg === CLIENT_ROBOT) setRobot(ws);
+            // TYPE: CONTROLLER
             else if (ws.type === CLIENT_UNKNOWN && msg === CLIENT_CONTROLLER) addController(ws);
-            else if (ws.type === CLIENT_CONTROLLER && msg === '🎞️') ws.ackFrames++;
+            // CLIENT: ACK
+            else if (ws.type === CLIENT_CONTROLLER && msg === '🎞️') {
+                ws.ack = true;
+                const controllersArr = [...controllers];
+                const ack = controllersArr.reduce((ack, c) => ack && c.ack, true);
+                if (ack) {
+                    controllersArr.forEach((c) => (c.ack = false));
+                    robot?.sendMessage('🎞️');
+                }
+            }
         }
     });
 
