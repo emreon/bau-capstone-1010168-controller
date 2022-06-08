@@ -116,7 +116,6 @@ wss.on('connection', (ws, req) => {
             // console.log(`[WS] ${ws.type} New Frame: ${byteSize(data.length).toString()}`);
 
             frameId++;
-            bufSize += data.length;
             controllers.forEach((c) => c.send(data));
         }
 
