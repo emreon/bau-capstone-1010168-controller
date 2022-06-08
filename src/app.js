@@ -59,6 +59,7 @@ const td = new TextDecoder();
 
 // https://github.com/websockets/ws
 const wss = new WebSocketServer({ server });
+let frameId = 0;
 let robot = null;
 let controllers = new Set();
 
