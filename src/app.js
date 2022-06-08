@@ -59,10 +59,6 @@ const td = new TextDecoder();
 
 // https://github.com/websockets/ws
 const wss = new WebSocketServer({ server });
-
-// let targetFPS = MAX_FPS;
-let frameId = 0;
-let bufSize = 0;
 let robot = null;
 let controllers = new Set();
 
@@ -80,7 +76,6 @@ function setRobot(ws) {
 
 function unsetRobot() {
     robot = null;
-
     const controllersArr = [...controllers];
     controllersArr.forEach((c) => (c.ack = false));
 }
@@ -88,57 +83,13 @@ function unsetRobot() {
 function addController(ws) {
     ws.type = CLIENT_CONTROLLER;
     controllers.add(ws);
-
-    // ws.ackIntervalId = setInterval(() => {
-    //     if (!robot) return;
-    //     if (ws.isStopped) return;
-
-    //     const kbitps = Math.ceil((bufSize * 8) / 1000);
-    //     const mbitps = kbitps / 1000;
-    //     if (process.env.NODE_ENV === 'development') console.log('Bandwidth:', kbitps, 'kbit/s', mbitps, 'mbit/s');
-    //     bufSize = 0;
-
-    //     const ack = ws.ackFrames + ws.frameOffset;
-    //     const realLag = frameId - ack;
-    //     const lag = Math.max(realLag - ws.lagOffset, 0);
-    //     // console.log('Frame Id:', frameId, ' ACK:', ack, ' Lag:', lag);
-
-    //     if (lag > targetFPS * 2) {
-    //         targetFPS = Math.floor(targetFPS / 2);
-    //         ws.lagOffset = realLag;
-
-    //         console.warn('[WS] Target FPS:', targetFPS);
-
-    //         if (targetFPS === 1) {
-    //             console.warn('[WS] Client is too slow!');
-    //             robot.sendMessage('stop');
-    //             ws.isStopped = true;
-    //         } else {
-    //             ws.sendMessage('reset');
-    //             robot.sendMessage({ type: 'fps', targetFPS });
-    //         }
-    //     }
-    // }, 1000);
-
-    // const shouldStart = controllers.size < 1;
-    // controllers.add(ws);
-
-    // if (shouldStart && robot) robot.sendMessage({ type: 'start', targetFPS });
 }
 
 function removeController(ws) {
     controllers.delete(ws);
-
     const controllersArr = [...controllers];
     const ack = controllersArr.reduce((ack, c) => ack && c.ack, true);
     if (ack) robot?.sendMessage('🎞️');
-
-    // clearInterval(ws.ackIntervalId);
-
-    // if (controllers.size < 1) {
-    //     ws.sendMessage('stop');
-    //     targetFPS = MAX_FPS;
-    // }
 }
 
 wss.on('listening', () => {
@@ -150,10 +101,6 @@ wss.on('connection', (ws, req) => {
 
     ws.type = CLIENT_UNKNOWN;
     ws.ack = false;
-    // ws.ackFrames = 0;
-    // ws.frameOffset = frameId;
-    // ws.lagOffset = 0;
-    // ws.isStopped = false;
 
     ws.sendMessage = (msg) => {
         const msgStr = JSON.stringify(msg);
@@ -190,6 +137,10 @@ wss.on('connection', (ws, req) => {
                     controllersArr.forEach((c) => (c.ack = false));
                     robot?.sendMessage('🎞️');
                 }
+            }
+            // COMMAND: MOVE
+            else if (msg.name === 'move') {
+                robot?.sendMessage(msg);
             }
         }
     });

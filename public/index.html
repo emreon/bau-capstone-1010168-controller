@@ -94,7 +94,7 @@
                                 <span style="width: 80px" class="input-group-text"><b>Y (mm)</b></span>
                                 <input id="ty" type="number" class="form-control focus" placeholder="100 mm" />
                             </div>
-                            <button type="button" class="btn btn-primary">🚀 MOVE</button>
+                            <button id="btn-move" type="button" class="btn btn-primary">🚀 MOVE</button>
                             <button type="button" class="btn btn-primary">🧲 PICK</button>
                             <button type="button" class="btn btn-primary">🎯 RELEASE</button>
                             <button type="button" class="btn btn-primary">🔴 STOP</button>
@@ -395,6 +395,12 @@
                 document.getElementById('tx').value = pos.xmm.toFixed(2);
                 document.getElementById('ty').value = pos.ymm.toFixed(2);
             }
+
+            document.getElementById('btn-move').addEventListener('click', () => {
+                const tx = parseInt(document.getElementById('tx').value) || 0;
+                const ty = parseInt(document.getElementById('ty').value) || 0;
+                ws.sendMessage({ name: 'move', x: tx, y: ty });
+            });
         </script>
 
         <!-- Web Socket -->
