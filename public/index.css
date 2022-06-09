@@ -46,6 +46,9 @@ body > main {
 #camera {
     user-select: none;
     object-fit: contain;
+}
+
+#camera[data-camera='on'] {
     cursor: crosshair;
 }
 
@@ -75,6 +78,15 @@ body > main {
     position: absolute;
     width: 0px;
     height: 0px;
+}
+
+#camera-border {
+    border: 4px solid #212529;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
 }
 
 #pos-container {
@@ -111,7 +123,7 @@ body > main {
 }
 
 #workspace {
-    border: 3px solid dodgerblue;
+    border: 2px solid dodgerblue;
     position: absolute;
 }
 

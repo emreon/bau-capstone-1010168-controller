@@ -124,11 +124,11 @@ wss.on('connection', (ws, req) => {
             const msgStr = td.decode(data);
             const msg = JSON.parse(msgStr);
 
-            // TTPE: ROBOT
+            // TTPE ROBOT
             if (ws.type === CLIENT_UNKNOWN && msg === CLIENT_ROBOT) setRobot(ws);
-            // TYPE: CONTROLLER
+            // TYPE CONTROLLER
             else if (ws.type === CLIENT_UNKNOWN && msg === CLIENT_CONTROLLER) addController(ws);
-            // CLIENT: ACK
+            // CLIENT ACK
             else if (ws.type === CLIENT_CONTROLLER && msg === '🎞️') {
                 ws.ack = true;
                 const controllersArr = [...controllers];
@@ -138,8 +138,20 @@ wss.on('connection', (ws, req) => {
                     robot?.sendMessage('🎞️');
                 }
             }
-            // COMMAND: MOVE
+            // MOVE
             else if (msg.name === 'move') {
+                robot?.sendMessage(msg);
+            }
+            // PICK
+            else if (msg === '🧲') {
+                robot?.sendMessage(msg);
+            }
+            // PLACE
+            else if (msg === '🎯') {
+                robot?.sendMessage(msg);
+            }
+            // HOME
+            else if (msg === '🏠') {
                 robot?.sendMessage(msg);
             }
         }

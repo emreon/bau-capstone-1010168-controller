@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Bahcesehir University Capstone Project 1010168 Controller</title>
+        <title>🤖 BAU Capstone (1010168)</title>
         <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
             rel="stylesheet"
@@ -16,7 +16,7 @@
     <body>
         <header>
             <nav class="container-fluid navbar bg-dark h-100" oncontextmenu="return false">
-                <a class="navbar-brand text-light">🤖 Bahcesehir University Capstone Project 1010168 Controller</a>
+                <a class="navbar-brand text-light">🤖 BAU Capstone (1010168)</a>
             </nav>
         </header>
         <main class="container-fluid bg-dark text-light">
@@ -28,15 +28,14 @@
                     oncontextmenu="return false"
                 >
                     <!-- Camera Panel Overlay -->
-                    <div id="camera-panel-overlay">
+                    <div id="camera-panel-overlay" style="display: none">
                         <p class="fs-4">FPS:&nbsp; <span id="fps">0</span></p>
                         <div id="gui"></div>
 
                         <p id="pos-container" class="fs-4">
                             POS:&nbsp;
                             <span id="pos">
-                                X<span id="pos-xmm" class="posmm">000.00</span> Y<span id="pos-ymm" class="posmm"
-                                    >000.00</span
+                                X<span id="pos-xmm" class="posmm">0</span> Y<span id="pos-ymm" class="posmm">0</span
                                 >&nbsp; (<span id="pos-x" class="pos">0</span>, <span id="pos-y" class="pos">0</span>)
                             </span>
                         </p>
@@ -44,9 +43,10 @@
 
                     <!-- Camera Overlay -->
                     <div id="camera-overlay">
-                        <div id="pointer-x"></div>
-                        <div id="pointer-y"></div>
-                        <div id="workspace"></div>
+                        <div id="camera-border"></div>
+                        <div id="pointer-x" style="display: none"></div>
+                        <div id="pointer-y" style="display: none"></div>
+                        <div id="workspace" style="display: none"></div>
                     </div>
 
                     <!-- Camera Image -->
@@ -58,30 +58,31 @@
                 <!-- Control Panel -->
                 <div id="control-panel" class="col">
                     <div class="row mb-4">
-                        <!-- Calibration -->
+                        <!-- Workspace -->
                         <div class="col-12 mb-3">
-                            <div class="fs-4 mb-0">Calibration</div>
+                            <div class="fs-4 mb-0">Workspace</div>
                             <!-- X0 / Y0 -->
                             <div class="input-group">
-                                <span style="width: 80px" class="input-group-text"><b>X0 (px)</b></span>
+                                <span style="width: 80px" class="input-group-text"><b>X₀ (px)</b></span>
                                 <input id="x0" type="number" class="form-control focus" placeholder="0 px" />
-                                <span style="width: 80px" class="input-group-text"><b>Y0 (px)</b></span>
+                                <span style="width: 80px" class="input-group-text"><b>Y₀ (px)</b></span>
                                 <input id="y0" type="number" class="form-control focus" placeholder="0 px" />
                             </div>
-                            <!-- XX / YY -->
+                            <!-- X1 / Y1 -->
                             <div class="input-group">
-                                <span style="width: 80px" class="input-group-text"><b>XX (px)</b></span>
-                                <input id="xx" type="number" class="form-control focus" placeholder="1296 px" />
-                                <span style="width: 80px" class="input-group-text"><b>YY (px)</b></span>
-                                <input id="yy" type="number" class="form-control focus" placeholder="730 px" />
+                                <span style="width: 80px" class="input-group-text"><b>X₁ (px)</b></span>
+                                <input id="x1" type="number" class="form-control focus" />
+                                <span style="width: 80px" class="input-group-text"><b>Y₁ (px)</b></span>
+                                <input id="y1" type="number" class="form-control focus" />
                             </div>
                             <!-- Width / Height -->
                             <div class="input-group">
                                 <span style="width: 80px" class="input-group-text"><b>W (mm)</b></span>
-                                <input id="wmm" type="number" class="form-control focus" placeholder="100 mm" />
+                                <input id="wmm" type="number" class="form-control focus" />
                                 <span style="width: 80px" class="input-group-text"><b>H (mm)</b></span>
-                                <input id="hmm" type="number" class="form-control focus" placeholder="100 mm" />
+                                <input id="hmm" type="number" class="form-control focus" />
                             </div>
+                            <button id="btn-update-workspace" type="button" class="btn btn-primary">✍️ UPDATE</button>
                         </div>
 
                         <!-- Robot Controls -->
@@ -90,14 +91,21 @@
                             <div class="fs-4 mb-0">Target</div>
                             <div class="input-group mb-2">
                                 <span style="width: 80px" class="input-group-text"><b>X (mm)</b></span>
-                                <input id="tx" type="number" class="form-control focus" placeholder="100 mm" />
+                                <input id="tx" type="number" class="form-control focus" placeholder="0 mm" />
                                 <span style="width: 80px" class="input-group-text"><b>Y (mm)</b></span>
-                                <input id="ty" type="number" class="form-control focus" placeholder="100 mm" />
+                                <input id="ty" type="number" class="form-control focus" placeholder="0 mm" />
+                            </div>
+                            <div class="input-group mb-2">
+                                <span style="width: 80px" class="input-group-text"><b>θ₁ (deg)</b></span>
+                                <input id="tt1" type="number" class="form-control focus" placeholder="0°" />
+                                <span style="width: 80px" class="input-group-text"><b>θ₂ (deg)</b></span>
+                                <input id="tt2" type="number" class="form-control focus" placeholder="0°" />
                             </div>
                             <button id="btn-move" type="button" class="btn btn-primary">🚀 MOVE</button>
-                            <button type="button" class="btn btn-primary">🧲 PICK</button>
-                            <button type="button" class="btn btn-primary">🎯 RELEASE</button>
-                            <button type="button" class="btn btn-primary">🔴 STOP</button>
+                            <button id="btn-pick" type="button" class="btn btn-primary">🧲 PICK</button>
+                            <button id="btn-place" type="button" class="btn btn-primary">🎯 PLACE</button>
+                            <button id="btn-home" type="button" class="btn btn-primary">🏠 HOME</button>
+                            <!-- <button type="button" class="btn btn-primary">🔴 STOP</button> -->
                         </div>
 
                         <!-- Object Detection -->
@@ -172,13 +180,21 @@
             // 1296x730 @30 FPS
             const CAM_WIDTH = 1296;
             const CAM_HEIGHT = 730;
+            const ASPECT_RATIO = CAM_WIDTH / CAM_HEIGHT;
 
-            // 100mm X 100mm
-            const WORKSPACE_WIDTH = 100;
-            const WORKSPACE_HEIGHT = 100;
+            // 420mm X 420mm
+            const WORKSPACE_WIDTH = 420;
+            const WORKSPACE_HEIGHT = 420;
 
             let fps = 0;
             let renderedFrames = 0;
+
+            window.addEventListener('load', () => {
+                document.getElementById('x1').placeholder = `${CAM_WIDTH} px`;
+                document.getElementById('y1').placeholder = `${CAM_HEIGHT} px`;
+                document.getElementById('wmm').placeholder = `${WORKSPACE_WIDTH} mm`;
+                document.getElementById('hmm').placeholder = `${WORKSPACE_HEIGHT} mm`;
+            });
 
             setInterval(() => {
                 fps = renderedFrames;
@@ -191,22 +207,34 @@
                     const cam = document.getElementById('camera');
                     if (cam.dataset.camera !== 'off') {
                         cam.dataset.camera = 'off';
+                        document.getElementById('camera-panel-overlay').style.display = 'none';
+                        document.getElementById('workspace').style.display = 'none';
+                        document.getElementById('pointer-x').style.display = 'none';
+                        document.getElementById('pointer-y').style.display = 'none';
                         resizeCamOverlay();
                     }
                 }
             }, 1000);
+
             function renderImage(data) {
                 const blob = new Blob([data], { type: 'image/jpeg' });
                 const blobUrl = URL.createObjectURL(blob);
 
                 const cam = document.getElementById('camera');
-                let resize = false;
+                let camOn = false;
                 if (cam.dataset.camera !== 'on') {
                     cam.dataset.camera = 'on';
-                    resize = true;
+                    camOn = true;
                 }
                 cam.onload = (e) => {
-                    if (resize) resizeCamOverlay();
+                    if (camOn) {
+                        document.getElementById('camera-panel-overlay').style.display = 'block';
+                        document.getElementById('workspace').style.display = 'block';
+                        document.getElementById('pointer-x').style.display = 'block';
+                        document.getElementById('pointer-y').style.display = 'block';
+                        resizeCamOverlay();
+                        resizeWorkspace();
+                    }
                     URL.revokeObjectURL(blobUrl);
                     renderedFrames++;
                     ws.sendMessage('🎞️');
@@ -214,84 +242,102 @@
                 cam.src = blobUrl;
             }
 
-            {
-                document.addEventListener('mousemove', (e) => {
-                    const camOverlay = document.getElementById('camera-overlay');
-                    const camOverlayRect = camOverlay.getBoundingClientRect();
+            document.addEventListener('mousemove', (e) => {
+                const camOverlay = document.getElementById('camera-overlay');
+                const camOverlayRect = camOverlay.getBoundingClientRect();
 
-                    const px = document.getElementById('pointer-x');
-                    px.style.top = `${e.clientY - camOverlayRect.y}px`;
-                    const py = document.getElementById('pointer-y');
-                    py.style.left = `${e.clientX - camOverlayRect.x}px`;
-                });
+                const px = document.getElementById('pointer-x');
+                px.style.top = `${e.clientY - camOverlayRect.y}px`;
+                const py = document.getElementById('pointer-y');
+                py.style.left = `${e.clientX - camOverlayRect.x}px`;
+            });
 
-                function resizeWorkspace() {
-                    const img = getElementById('camera');
-                    // const pos = getPos(img, )
+            function resizeWorkspace() {
+                const img = document.getElementById('camera');
+                const pos = getPos(img);
 
-                    // const ws = document.getElementById('workspace')
-                    // ws.style.left = `${}`
-                }
+                const ws = document.getElementById('workspace');
+                ws.style.left = `${pos.x0}px`;
+                ws.style.top = `${pos.y0}px`;
+                ws.style.width = `${pos.x1 - pos.x0}px`;
+                ws.style.height = `${pos.y1 - pos.y0}px`;
+            }
 
-                function resizeCamPanelOverlay() {
-                    const camPanel = document.getElementById('camera-panel');
-                    const camPanelRect = camPanel.getBoundingClientRect();
+            function resizeCamPanelOverlay() {
+                const camPanel = document.getElementById('camera-panel');
+                const camPanelRect = camPanel.getBoundingClientRect();
 
-                    // TODO: get padding values from the camPanel
-                    const camPanelOverlay = document.getElementById('camera-panel-overlay');
-                    camPanelOverlay.style.left = `${camPanelRect.left + 32}px`;
-                    camPanelOverlay.style.top = `${camPanelRect.top}px`;
-                    camPanelOverlay.style.width = `${camPanelRect.width - 48}px`;
-                    camPanelOverlay.style.height = `${camPanelRect.height}px`;
-                }
+                // TODO: get padding values from the camPanel
+                const camPanelOverlay = document.getElementById('camera-panel-overlay');
+                camPanelOverlay.style.left = `${camPanelRect.left + 32}px`;
+                camPanelOverlay.style.top = `${camPanelRect.top}px`;
+                camPanelOverlay.style.width = `${camPanelRect.width - 48}px`;
+                camPanelOverlay.style.height = `${camPanelRect.height}px`;
+            }
 
-                function resizeCamOverlay() {
-                    const cam = document.getElementById('camera');
-                    const camRect = cam.getBoundingClientRect();
+            function resizeCamOverlay() {
+                const cam = document.getElementById('camera');
+                const camRect = cam.getBoundingClientRect();
 
-                    const camOverlay = document.getElementById('camera-overlay');
-                    camOverlay.style.left = `${camRect.left}px`;
-                    camOverlay.style.top = `${camRect.top}px`;
-                    camOverlay.style.width = `${camRect.width}px`;
-                    camOverlay.style.height = `${camRect.height}px`;
-                }
+                const camOverlay = document.getElementById('camera-overlay');
+                camOverlay.style.left = `${camRect.left}px`;
+                camOverlay.style.top = `${camRect.top}px`;
+                camOverlay.style.width = `${camRect.width}px`;
+                camOverlay.style.height = `${camRect.height}px`;
+            }
 
-                function onResize() {
-                    resizeCamPanelOverlay();
-                    resizeCamOverlay();
-                }
-                window.addEventListener('resize', onResize);
-                onResize();
+            function onResize() {
+                resizeCamPanelOverlay();
+                resizeCamOverlay();
+                resizeWorkspace();
+            }
+            window.addEventListener('resize', onResize);
+            onResize();
 
-                function getPos(img, pageX, pageY) {
-                    const imgRect = img.getBoundingClientRect();
+            function getPos(img, targetX = 0, targetY = 0) {
+                const imgRect = img.getBoundingClientRect();
 
-                    const x = Math.min(pageX - imgRect.x, imgRect.width);
-                    const y = Math.min(pageY - imgRect.y, imgRect.height);
+                // target x,y coords in px (top left is 0,0)
+                const x = Math.min(targetX - imgRect.x, imgRect.width);
+                const y = Math.min(targetY - imgRect.y, imgRect.height);
 
-                    const x0 = parseInt(document.getElementById('x0').value) || 0;
-                    const y0 = parseInt(document.getElementById('y0').value) || 0;
-                    const xx = parseInt(document.getElementById('xx').value) || CAM_WIDTH;
-                    const yy = parseInt(document.getElementById('yy').value) || CAM_HEIGHT;
-                    const wmm = parseFloat(document.getElementById('wmm').value) || WORKSPACE_WIDTH;
-                    const hmm = parseFloat(document.getElementById('hmm').value) || WORKSPACE_HEIGHT;
+                const scaler = CAM_WIDTH / imgRect.width;
+                const xs = parseInt(x * scaler);
+                const ys = parseInt(y * scaler);
 
-                    const xs = parseInt((xx / imgRect.width) * x);
-                    const ys = parseInt((yy / imgRect.height) * y);
+                // workspace top left in px
+                const x0s = parseInt(document.getElementById('x0').value) || 0;
+                const y0s = parseInt(document.getElementById('y0').value) || 0;
+                const x0 = parseInt(x0s / scaler);
+                const y0 = parseInt(y0s / scaler);
 
-                    const xxs = parseInt(xx / imgRect.width);
+                // workspace bottom right in px
+                const x1s = parseInt(document.getElementById('x1').value) || CAM_WIDTH;
+                const y1s = parseInt(document.getElementById('y1').value) || CAM_HEIGHT;
+                const x1 = parseInt(x1s / scaler);
+                const y1 = parseInt(y1s / scaler);
 
-                    const xmm = ((xs - x0) / xx) * wmm;
-                    const ymm = ((ys - y0) / yy) * hmm;
+                // workspace width and height in mm
+                const wmm = parseInt(document.getElementById('wmm').value) || WORKSPACE_WIDTH;
+                const hmm = parseInt(document.getElementById('hmm').value) || WORKSPACE_HEIGHT;
 
-                    return { x: xs, y: ys, xmm, ymm, wmm, hmm };
-                }
+                // target x,y coords in mm
+                const xmm = parseInt(((xs - x0s) / x1s) * wmm);
+                const ymm = hmm - parseInt(((ys - y0s) / y1s) * hmm);
 
+                return { x: parseInt(x), y: parseInt(y), xs, ys, x0, y0, x0s, y0s, x1, y1, x1s, y1s, xmm, ymm };
+            }
+
+            document.getElementById('btn-update-workspace').addEventListener('click', onResize);
+
+            function initImgListeners() {
                 const img = document.getElementById('camera');
 
                 img.addEventListener('mouseenter', () => {
-                    document.getElementById('pointer-x').style.display = 'block';
-                    document.getElementById('pointer-y').style.display = 'block';
+                    if (img.dataset.camera === 'on') {
+                        document.getElementById('pointer-x').style.display = 'block';
+                        document.getElementById('pointer-y').style.display = 'block';
+                    }
                 });
 
                 img.addEventListener('mouseleave', () => {
@@ -305,16 +351,10 @@
                     const img = e.target.closest('#camera');
                     const pos = getPos(img, e.pageX, e.pageY);
 
-                    const xmmi = `${Math.trunc(pos.xmm)}`.padStart(3, '0');
-                    const xmmf = `${Math.abs(Math.round((pos.xmm % 1) * 100))}`.padStart(2, '0');
-
-                    const ymmi = `${Math.trunc(pos.ymm)}`.padStart(3, '0');
-                    const ymmf = `${Math.abs(Math.round((pos.ymm % 1) * 100))}`.padStart(2, '0');
-
-                    document.getElementById('pos-x').innerText = pos.x;
-                    document.getElementById('pos-y').innerText = pos.y;
-                    document.getElementById('pos-xmm').innerText = `${xmmi}.${xmmf}`;
-                    document.getElementById('pos-ymm').innerText = `${ymmi}.${ymmf}`;
+                    document.getElementById('pos-x').innerText = pos.xs;
+                    document.getElementById('pos-y').innerText = CAM_HEIGHT - pos.ys;
+                    document.getElementById('pos-xmm').innerText = pos.xmm;
+                    document.getElementById('pos-ymm').innerText = pos.ymm;
                 });
 
                 img.addEventListener('click', (e) => {
@@ -324,6 +364,7 @@
                     deselectObject();
                 });
             }
+            initImgListeners();
         </script>
 
         <!-- Detected Objects -->
@@ -392,14 +433,26 @@
         <script>
             function setTarget(pos) {
                 // console.log('Target (mm):', pos.xmm, pos.ymm, ' Target (px):', pos.x, pos.y);
-                document.getElementById('tx').value = pos.xmm.toFixed(2);
-                document.getElementById('ty').value = pos.ymm.toFixed(2);
+                document.getElementById('tx').value = pos.xmm;
+                document.getElementById('ty').value = pos.ymm;
             }
 
             document.getElementById('btn-move').addEventListener('click', () => {
                 const tx = parseInt(document.getElementById('tx').value) || 0;
                 const ty = parseInt(document.getElementById('ty').value) || 0;
                 ws.sendMessage({ name: 'move', x: tx, y: ty });
+            });
+
+            document.getElementById('btn-pick').addEventListener('click', () => {
+                ws.sendMessage('🧲');
+            });
+
+            document.getElementById('btn-place').addEventListener('click', () => {
+                ws.sendMessage('🎯');
+            });
+
+            document.getElementById('btn-home').addEventListener('click', () => {
+                ws.sendMessage('🏠');
             });
         </script>
 
@@ -409,7 +462,7 @@
             const WS_ADDR = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`;
             const td = new TextDecoder();
 
-            console.debug('[WS] Connecting to the server...');
+            console.log('[WS] Connecting to the server...');
             const ws = new WebSocket(WS_ADDR);
             ws.binaryType = 'arraybuffer';
 
@@ -420,7 +473,7 @@
             };
 
             ws.onopen = (e) => {
-                console.debug(`[WS] Connected to "${WS_ADDR}"`, e);
+                console.log(`[WS] Connected to "${WS_ADDR}"`, e);
                 ws.sendMessage('🧠');
                 ws.sendMessage('🎞️');
             };
@@ -429,7 +482,7 @@
                 // TEXT MESSAGE
                 if (typeof e.data === 'string') {
                     const msg = JSON.parse(e.data);
-                    console.debug('[WS] Message: ', msg);
+                    console.log('[WS] Message: ', msg);
 
                     if (msg === 'reset') {
                         location.reload();
@@ -447,7 +500,7 @@
             };
 
             ws.onclose = (e) => {
-                console.debug('[WS] Connection closed', e);
+                console.log('[WS] Connection closed', e);
             };
         </script>
 
