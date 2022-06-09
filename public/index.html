@@ -321,11 +321,32 @@
                 const wmm = parseInt(document.getElementById('wmm').value) || WORKSPACE_WIDTH;
                 const hmm = parseInt(document.getElementById('hmm').value) || WORKSPACE_HEIGHT;
 
-                // target x,y coords in mm
-                const xmm = parseInt(((xs - x0s) / x1s) * wmm);
-                const ymm = hmm - parseInt(((ys - y0s) / y1s) * hmm);
+                // workspace width and height in px (scaled)
+                const wpxs = x1s - x0s;
+                const hpxs = y1s - y0s;
 
-                return { x: parseInt(x), y: parseInt(y), xs, ys, x0, y0, x0s, y0s, x1, y1, x1s, y1s, xmm, ymm };
+                // target x,y coords in mm
+                const xmm = parseInt(((xs - x0s) / wpxs) * wmm);
+                const ymm = parseInt(((CAM_HEIGHT - ys - y0s) / hpxs) * hmm);
+
+                return {
+                    x: parseInt(x),
+                    y: parseInt(y),
+                    xs,
+                    ys,
+                    x0,
+                    y0,
+                    x0s,
+                    y0s,
+                    x1,
+                    y1,
+                    x1s,
+                    y1s,
+                    xmm,
+                    ymm,
+                    wpxs,
+                    hpxs,
+                };
             }
 
             document.getElementById('btn-update-workspace').addEventListener('click', onResize);
