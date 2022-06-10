@@ -53,6 +53,7 @@ server.listen(PORT, HOSTNAME);
 
 const CLIENT_UNKNOWN = '❓';
 const CLIENT_ROBOT = '🤖';
+const CLIENT_CV = '👁️';
 const CLIENT_CONTROLLER = '🧠';
 const td = new TextDecoder();
 
@@ -60,6 +61,7 @@ const td = new TextDecoder();
 const wss = new WebSocketServer({ server });
 let frameId = 0;
 let robot = null;
+let cv = null;
 let controllers = new Set();
 
 function setRobot(ws) {
@@ -72,6 +74,15 @@ function setRobot(ws) {
     const controllersArr = [...controllers];
     controllersArr.forEach((c) => (c.ack = false));
     robot?.sendMessage('🎞️');
+}
+
+function setCV(ws) {
+    if (cv) cv.terminate();
+    cv = ws;
+}
+
+function unsetCV() {
+    cv = null;
 }
 
 function unsetRobot() {
@@ -125,6 +136,8 @@ wss.on('connection', (ws, req) => {
 
             // TTPE ROBOT
             if (ws.type === CLIENT_UNKNOWN && msg === CLIENT_ROBOT) setRobot(ws);
+            // TYPE CV
+            else if (ws.type === CLIENT_UNKNOWN && msg === CLIENT_CV) setCV(ws);
             // TYPE CONTROLLER
             else if (ws.type === CLIENT_UNKNOWN && msg === CLIENT_CONTROLLER) addController(ws);
             // CLIENT ACK
@@ -138,8 +151,8 @@ wss.on('connection', (ws, req) => {
                 }
             }
             // OBJECT DETECTION
-            else if (msg === '👁️') {
-                console.log('👁️👁️👁️ DETECT OBJECTS 👁️👁️👁️');
+            else if (msg.name === 'CV') {
+                cv?.sendMessage(msg);
             }
             // MOVE
             else if (msg.name === 'move') {

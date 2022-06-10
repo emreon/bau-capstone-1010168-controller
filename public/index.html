@@ -453,7 +453,8 @@
         <!-- Detected Objects -->
         <script>
             document.getElementById('btn-detect-obj').addEventListener('click', () => {
-                ws.sendMessage('👁️');
+                const img = document.getElementById('camera');
+                ws.sendMessage({ name: 'CV', pos });
             });
 
             function clearObjects() {
