@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+            crossorigin="anonymous"
+        />
+        <style>
+            :root {
+                --header-height: 65px;
+            }
+
+            .nav-link {
+                user-select: none;
+            }
+
+            .nav-link.active {
+                color: whitesmoke;
+                pointer-events: none;
+            }
+
+            body {
+                height: 100vh;
+                overflow: hidden;
+                background-color: #212529;
+            }
+
+            body > header {
+                height: var(--header-height);
+                position: fixed;
+            }
+
+            main {
+                width: 100%;
+                height: 100%;
+            }
+
+            #c {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body style="margin: 0px; padding: 0px">
+        <header>
+            <nav class="container-fluid navbar bg-dark h-100" oncontextmenu="return false">
+                <a class="navbar-brand text-light">🤖 BAU Capstone (1010168)</a>
+
+                <ul class="navbar-nav me-auto flex-row">
+                    <li class="nav-item mx-2">
+                        <a class="nav-link" href="/">🧠 Controller</a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link active" href="/iksolver">🦾 IK Solver</a>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+        <main>
+            <canvas id="c"></canvas>
+        </main>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"
+            integrity="sha512-WoO4Ih0CDOSLYafy22wZD/mcJ7k0ESLqtQsFa6zFKnEUrbtuGU+GkLtVhgt93xa2qewG5gKEC6CWlN8OaCTSVg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        ></script>
+        <script>
+            const degToRad = 0.017453292519943295;
+            const radToDeg = 57.29577951308232;
+            const canvas = document.getElementById('c');
+
+            const DEFAULT = { L1: 355, L2: 375, yOffset: 130 };
+            const Y = 100;
+            const workspace = { x: 420, y: 420 };
+            const armWidth = 10;
+            const options = { yOffset: DEFAULT.yOffset };
+            const arm = { len: DEFAULT.L1, angleDeg: 0, next: { len: DEFAULT.L2, angleDeg: 0 } };
+            let target = { x: 0, y: 0 };
+            let mouse = { x: 0, y: 0 };
+
+            function render() {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+
+                let { yOffset } = options;
+                let { x, y } = target;
+                x = Math.max(x, 0);
+                y = Math.max(y, yOffset);
+
+                const L1 = arm.len;
+                const L2 = arm.next.len;
+
+                // const angle2 = Math.acos((x * x + y * y + L1 + L2) / (2 * L1 * L2));
+                // const angle1 = Math.atan(x / y) - Math.atan((L2 * Math.sin(angle2)) / (L1 + L2 * Math.cos(angle2)));
+
+                // console.log('target:', target, 'a1:', parseInt(angle1 * radToDeg), 'a2:', parseInt(angle2 * radToDeg));
+                // if (!isNaN(angle1) && !isNaN(angle2)) {
+                //     arm.angleDeg = angle1 * radToDeg;
+                //     arm.next.angleDeg = angle2 * radToDeg;
+                // }
+
+                let a = Math.atan(y / x);
+                // let q2 = Math.acos((x * x + y * y - L1 * L1 - L2 * L2) / (2 * L1 * L2));
+                let q2 = -Math.acos((x * x + y * y - L1 * L1 - L2 * L2) / (2 * L1 * L2));
+                let q1 = Math.atan(y / x) - Math.atan((L2 * Math.sin(q2)) / (L1 + L2 * Math.cos(q2)));
+
+                // console.log('target:', target, 'q1:', parseInt(q1 * radToDeg), 'q2:', parseInt(q2 * radToDeg));
+                if (!isNaN(q1) && !isNaN(q2)) {
+                    arm.angleDeg = q1 * radToDeg;
+                    arm.next.angleDeg = q2 * radToDeg;
+                } else {
+                    arm.angleDeg = a * radToDeg;
+                    arm.next.angleDeg = 0;
+                }
+
+                // https://stackoverflow.com/questions/8326191/html5-canvas-subscript-and-superscript
+                let textY = 80;
+                let textYInc = 30;
+                ctx.font = '22px monospace';
+                ctx.fillStyle = 'white';
+                ctx.fillText(` α: ${String(parseInt(a * radToDeg)).padStart(4, ' ')}°`, 20, (textY += textYInc));
+                ctx.fillText(`${parseInt(x)}mm ${parseInt(y)}mm`, mouse.x, mouse.y - 20);
+                ctx.fillText(`θ₁: ${String(parseInt(q1 * radToDeg)).padStart(4, ' ')}°`, 20, (textY += textYInc));
+                ctx.fillText(`θ₂: ${String(parseInt(q2 * radToDeg)).padStart(4, ' ')}°`, 20, (textY += textYInc));
+                ctx.fillText(
+                    `θ₃: ${String(parseInt((q1 + q2) * radToDeg)).padStart(4, ' ')}°`,
+                    20,
+                    (textY += textYInc)
+                );
+
+                textY += textYInc;
+                ctx.fillText(`L₁: ${parseInt(arm.len)}mm`, 20, (textY += textYInc));
+                ctx.fillText(`L₂: ${parseInt(arm.next.len)}mm`, 20, (textY += textYInc));
+
+                ctx.translate(canvas.width / 2, canvas.height - Y);
+                ctx.strokeStyle = '#44ABDA';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(0, -yOffset, workspace.x, -workspace.y);
+
+                ctx.strokeStyle = 'green';
+                ctx.beginPath();
+                ctx.moveTo(-canvas.width / 2, -yOffset);
+                ctx.lineTo(canvas.width / 2, -yOffset);
+                ctx.stroke();
+
+                ctx.rotate(-arm.angleDeg * degToRad);
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, -armWidth / 2, arm.len, armWidth);
+                ctx.beginPath();
+                ctx.arc(0, 0, armWidth * 2, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.translate(arm.len, 0);
+                ctx.rotate(-arm.next.angleDeg * degToRad);
+                ctx.fillStyle = 'firebrick';
+                ctx.fillRect(0, -armWidth / 2, arm.next.len, armWidth);
+                ctx.beginPath();
+                ctx.arc(0, 0, armWidth / 2, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(arm.next.len, 0, armWidth / 2, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.restore();
+                window.requestAnimationFrame(render);
+                // setTimeout(() => window.requestAnimationFrame(render), 1000);
+            }
+            window.requestAnimationFrame(render);
+
+            window.addEventListener('mousemove', (e) => {
+                mouse = { x: e.clientX, y: e.clientY };
+                target = { x: e.clientX - canvas.width / 2, y: -(e.clientY - canvas.height + Y) };
+            });
+
+            window.addEventListener('resize', () => {
+                canvas.width = document.body.clientWidth;
+                canvas.height = document.body.clientHeight;
+            });
+            canvas.width = document.body.clientWidth;
+            canvas.height = document.body.clientHeight;
+
+            // dat.gui
+            const gui = new dat.GUI({ name: 'My GUI' });
+            gui.add(arm, 'len', 50, 400).name('L1');
+            gui.add(arm.next, 'len', 50, 400).name('L2');
+            gui.add(options, 'yOffset', 0, 200).name('Y Offset');
+            gui.add(
+                {
+                    // https://stackoverflow.com/questions/18366229/is-it-possible-to-create-a-button-using-dat-gui
+                    reset: () => {
+                        arm.len = DEFAULT.L1;
+                        arm.next.len = DEFAULT.L2;
+                        options.yOffset = DEFAULT.yOffset;
+
+                        // https://stackoverflow.com/questions/16166440/refresh-dat-gui-with-new-values
+                        for (var i in gui.__controllers) {
+                            gui.__controllers[i].updateDisplay();
+                        }
+                    },
+                },
+                'reset'
+            ).name('Reset');
+        </script>
+    </body>
+</html>

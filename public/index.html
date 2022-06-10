@@ -17,6 +17,15 @@
         <header>
             <nav class="container-fluid navbar bg-dark h-100" oncontextmenu="return false">
                 <a class="navbar-brand text-light">🤖 BAU Capstone (1010168)</a>
+
+                <ul class="navbar-nav me-auto flex-row">
+                    <li class="nav-item mx-2">
+                        <a class="nav-link active" href="/">🧠 Controller</a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link" href="/iksolver">🦾 IK Solver</a>
+                    </li>
+                </ul>
             </nav>
         </header>
         <main class="container-fluid bg-dark text-light">
@@ -82,7 +91,12 @@
                                 <span style="width: 80px" class="input-group-text"><b>H (mm)</b></span>
                                 <input id="hmm" type="number" class="form-control focus" />
                             </div>
-                            <button id="btn-update-workspace" type="button" class="btn btn-primary">✍️ UPDATE</button>
+                            <button id="btn-update-workspace" type="button" class="btn btn-primary mt-2">
+                                ✍️ UPDATE
+                            </button>
+                            <button id="btn-reset-workspace" type="button" class="btn btn-primary mt-2">
+                                ❌ RESET
+                            </button>
                         </div>
 
                         <!-- Robot Controls -->
@@ -101,27 +115,30 @@
                                 <span style="width: 80px" class="input-group-text"><b>θ₂ (deg)</b></span>
                                 <input id="tt2" type="number" class="form-control focus" placeholder="0°" />
                             </div>
-                            <button id="btn-move" type="button" class="btn btn-primary">🚀 MOVE</button>
-                            <button id="btn-pick" type="button" class="btn btn-primary">🧲 PICK</button>
-                            <button id="btn-place" type="button" class="btn btn-primary">🎯 PLACE</button>
-                            <button id="btn-home" type="button" class="btn btn-primary">🏠 HOME</button>
-                            <!-- <button type="button" class="btn btn-primary">🔴 STOP</button> -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <button id="btn-move" type="button" class="btn btn-primary">🚀 MOVE XY</button>
+                                    <button id="btn-move2" type="button" class="btn btn-primary">🚀 MOVE θ</button>
+                                    <button id="btn-pick" type="button" class="btn btn-primary">🧲 PICK</button>
+                                    <button id="btn-place" type="button" class="btn btn-primary">🎯 PLACE</button>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <button id="btn-home" type="button" class="btn btn-primary">🏠 HOME</button>
+                                    <button id="btn-map" type="button" class="btn btn-primary">🗺️ MAP</button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Object Detection -->
                         <div class="col-12 mb-3">
                             <div class="fs-4 mb-0">Object Detection</div>
-                            <div class="input-group mb-2">
-                                <span style="width: 160px" class="input-group-text"><b>Interval (seconds)</b></span>
-                                <input id="tx" type="number" class="form-control focus" placeholder="3 seconds" />
-                            </div>
-                            <button type="button" class="btn btn-primary">✍️ UPDATE</button>
-                            <button type="button" class="btn btn-primary">🔄 REFRESH</button>
+                            <button id="btn-detect-obj" type="button" class="btn btn-primary mt-2">
+                                👁️ DETECT OBJECTS
+                            </button>
                         </div>
 
                         <!-- Detected Objects -->
                         <div class="col-12 mb-3">
-                            <p class="fs-4 mb-0">Detected Objects</p>
                             <div id="objects" class="list-group list-group-numbered">
                                 <button class="list-group-item list-group-item-action">
                                     <!-- 
@@ -139,17 +156,11 @@
                         </div>
 
                         <!-- Logs -->
-                        <div class="col-12 mb-3">
+                        <!-- <div class="col-12 mb-3">
                             <div class="fs-4 mb-0">📜 Logs</div>
-                            <!-- 
-                                <div class="input-group mb-2">
-                                    <span style="width: 160px" class="input-group-text"><b>Interval (seconds)</b></span>
-                                    <input id="tx" type="number" class="form-control focus" placeholder="3 seconds" />
-                                </div> 
-                            -->
-                            <textarea rows="2" class="w-100" disabled></textarea>
+                            <textarea class="w-100 h-100 mt-2" disabled style="max-height: 400px"> </textarea>
                             <button type="button" class="btn btn-primary">🗑️ CLEAR</button>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -173,6 +184,35 @@
                 const f = [...document.getElementsByClassName('focus')];
                 f.forEach((el) => (el.onclick = (e) => e.target.select()));
             }
+
+            let mouseX = 0,
+                mouseY = 0;
+            window.addEventListener('keydown', (e) => {
+                const img = document.getElementById('camera');
+                const imgRect = img.getBoundingClientRect();
+
+                const imgContainsMouse =
+                    imgRect.x <= mouseX &&
+                    mouseX <= imgRect.x + imgRect.width &&
+                    imgRect.y <= mouseY &&
+                    mouseY <= imgRect.y + imgRect.height;
+                if (!imgContainsMouse) return;
+
+                const pos = getPos(img, mouseX, mouseY);
+
+                // set bottom left
+                if (e.code === 'KeyQ') {
+                    document.getElementById('x0').value = pos.xs;
+                    document.getElementById('y0').value = CAM_HEIGHT - pos.ys;
+                    onResize();
+                }
+                // set top right
+                if (e.code === 'KeyE') {
+                    document.getElementById('x1').value = pos.xs;
+                    document.getElementById('y1').value = CAM_HEIGHT - pos.ys;
+                    onResize();
+                }
+            });
         </script>
 
         <!-- Camera Panel -->
@@ -186,8 +226,10 @@
             const WORKSPACE_WIDTH = 420;
             const WORKSPACE_HEIGHT = 420;
 
+            const MAX_NETWORK_INDEX = 3; // no frames for more than "MAX_NETWORK_INDEX" seconds --> NO NETWORK
             let fps = 0;
             let renderedFrames = 0;
+            let networkIndex = 0;
 
             window.addEventListener('load', () => {
                 document.getElementById('x1').placeholder = `${CAM_WIDTH} px`;
@@ -204,14 +246,19 @@
                 fpsEl.textContent = fps;
 
                 if (fps === 0) {
-                    const cam = document.getElementById('camera');
-                    if (cam.dataset.camera !== 'off') {
-                        cam.dataset.camera = 'off';
-                        document.getElementById('camera-panel-overlay').style.display = 'none';
-                        document.getElementById('workspace').style.display = 'none';
-                        document.getElementById('pointer-x').style.display = 'none';
-                        document.getElementById('pointer-y').style.display = 'none';
-                        resizeCamOverlay();
+                    networkIndex++;
+
+                    if (networkIndex >= MAX_NETWORK_INDEX) {
+                        const cam = document.getElementById('camera');
+                        if (cam.dataset.camera !== 'off') {
+                            cam.dataset.camera = 'off';
+                            document.getElementById('camera-panel-overlay').style.display = 'none';
+                            document.getElementById('workspace').style.display = 'none';
+                            document.getElementById('pointer-x').style.display = 'none';
+                            document.getElementById('pointer-y').style.display = 'none';
+                            resizeCamOverlay();
+                        }
+                        networkIndex = 0;
                     }
                 }
             }, 1000);
@@ -243,6 +290,9 @@
             }
 
             document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+
                 const camOverlay = document.getElementById('camera-overlay');
                 const camOverlayRect = camOverlay.getBoundingClientRect();
 
@@ -344,12 +394,24 @@
                     y1s,
                     xmm,
                     ymm,
+                    wmm,
+                    hmm,
                     wpxs,
                     hpxs,
                 };
             }
 
             document.getElementById('btn-update-workspace').addEventListener('click', onResize);
+
+            document.getElementById('btn-reset-workspace').addEventListener('click', () => {
+                document.getElementById('x0').value = '';
+                document.getElementById('y0').value = '';
+                document.getElementById('x1').value = '';
+                document.getElementById('y1').value = '';
+                document.getElementById('wmm').value = '';
+                document.getElementById('hmm').value = '';
+                onResize();
+            });
 
             function initImgListeners() {
                 const img = document.getElementById('camera');
@@ -390,6 +452,10 @@
 
         <!-- Detected Objects -->
         <script>
+            document.getElementById('btn-detect-obj').addEventListener('click', () => {
+                ws.sendMessage('👁️');
+            });
+
             function clearObjects() {
                 const objects = document.getElementById('objects');
                 objects.replaceChildren();
@@ -453,7 +519,6 @@
         <!-- Control Panel -->
         <script>
             function setTarget(pos) {
-                // console.log('Target (mm):', pos.xmm, pos.ymm, ' Target (px):', pos.x, pos.y);
                 document.getElementById('tx').value = pos.xmm;
                 document.getElementById('ty').value = pos.ymm;
             }
@@ -462,6 +527,12 @@
                 const tx = parseInt(document.getElementById('tx').value) || 0;
                 const ty = parseInt(document.getElementById('ty').value) || 0;
                 ws.sendMessage({ name: 'move', x: tx, y: ty });
+            });
+
+            document.getElementById('btn-move2').addEventListener('click', () => {
+                const tt1 = parseInt(document.getElementById('tt1').value) || 0;
+                const tt2 = parseInt(document.getElementById('tt2').value) || 0;
+                ws.sendMessage({ name: 'move2', t1: tt1, t2: tt2 });
             });
 
             document.getElementById('btn-pick').addEventListener('click', () => {
@@ -474,6 +545,11 @@
 
             document.getElementById('btn-home').addEventListener('click', () => {
                 ws.sendMessage('🏠');
+            });
+
+            document.getElementById('btn-map').addEventListener('click', () => {
+                const pos = getPos(document.getElementById('camera'));
+                ws.sendMessage({ name: 'C2CS', wmm: pos.wmm, hmm: pos.hmm });
             });
         </script>
 
@@ -523,18 +599,6 @@
             ws.onclose = (e) => {
                 console.log('[WS] Connection closed', e);
             };
-        </script>
-
-        <!-- Debug GUI -->
-        <script>
-            // const gui = new dat.GUI({ name: 'EMRE', autoPlace: false, closed: false });
-            // const guiContainer = document.getElementById('gui');
-            // guiContainer.appendChild(gui.domElement);
-
-            // const guiFolder = gui.addFolder('Folder');
-            // const test = { name: 'EMRE' };
-            // const guiTest = gui.add(test, 'name');
-            // guiTest.domElement.style.pointerEvents = 'none';
         </script>
     </body>
 </html>

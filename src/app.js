@@ -21,7 +21,7 @@ let retryTimeoutId = -1;
 // https://pm2.keymetrics.io/docs/usage/startup/
 
 // https://github.com/expressjs/serve-static
-const serve = serveStatic('public', { index: 'index.html' });
+const serve = serveStatic('public', { index: 'index.html', extensions: ['html'] });
 
 server.on('request', (req, res) => {
     console.log(`[HTTP] "${req.socket.remoteAddress}" ${req.method} ${req.headers.host}${req.url}`);
@@ -51,7 +51,6 @@ server.listen(PORT, HOSTNAME);
 
 // ---------------- WEBSOCKET SERVER ----------------
 
-const MAX_FPS = 30;
 const CLIENT_UNKNOWN = '❓';
 const CLIENT_ROBOT = '🤖';
 const CLIENT_CONTROLLER = '🧠';
@@ -138,8 +137,16 @@ wss.on('connection', (ws, req) => {
                     robot?.sendMessage('🎞️');
                 }
             }
+            // OBJECT DETECTION
+            else if (msg === '👁️') {
+                console.log('👁️👁️👁️ DETECT OBJECTS 👁️👁️👁️');
+            }
             // MOVE
             else if (msg.name === 'move') {
+                robot?.sendMessage(msg);
+            }
+            // MOVE 2
+            else if (msg.name === 'move2') {
                 robot?.sendMessage(msg);
             }
             // PICK
@@ -152,6 +159,10 @@ wss.on('connection', (ws, req) => {
             }
             // HOME
             else if (msg === '🏠') {
+                robot?.sendMessage(msg);
+            }
+            // C2CS
+            else if (msg.name === 'C2CS') {
                 robot?.sendMessage(msg);
             }
         }

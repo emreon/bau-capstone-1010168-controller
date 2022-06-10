@@ -2,6 +2,15 @@
     --header-height: 65px;
 }
 
+.nav-link {
+    user-select: none;
+}
+
+.nav-link.active {
+    color: whitesmoke;
+    pointer-events: none;
+}
+
 body {
     height: 100vh;
     overflow: hidden;
