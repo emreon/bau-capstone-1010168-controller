@@ -454,6 +454,7 @@
         <script>
             document.getElementById('btn-detect-obj').addEventListener('click', () => {
                 const img = document.getElementById('camera');
+                const pos = getPos(document.getElementById('camera'));
                 ws.sendMessage({ name: 'CV', pos });
             });
 
