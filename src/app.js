@@ -133,8 +133,6 @@ wss.on('connection', (ws, req) => {
             frameId++;
             controllers.forEach((c) => c.send(data));
 
-            console.log(cv.type, waitingFrame);
-
             if (waitingFrame) {
                 waitingFrame = false;
                 cv?.send(data);
