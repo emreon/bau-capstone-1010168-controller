@@ -124,7 +124,7 @@ wss.on('connection', (ws, req) => {
     ws.on('message', (data, isBinary) => {
         // BINARY MESSAGE (Handle Incoming Frame)
         if (isBinary) {
-            if (!ws.type === CLIENT_ROBOT) return;
+            // if (!ws.type === CLIENT_ROBOT) return;
             // https://github.com/75lb/byte-size
             // console.log(`[WS] ${ws.type} New Frame: ${byteSize(data.length).toString()}`);
 
@@ -132,8 +132,8 @@ wss.on('connection', (ws, req) => {
             controllers.forEach((c) => c.send(data));
 
             if (waitingFrame) {
-                cv?.send(data);
                 waitingFrame = false;
+                cv?.send(data);
             }
         }
 
