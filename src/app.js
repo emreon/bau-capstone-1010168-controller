@@ -63,6 +63,7 @@ let frameId = 0;
 let robot = null;
 let cv = null;
 let controllers = new Set();
+let waitingFrame = false;
 
 function setRobot(ws) {
     if (robot) robot.terminate();
@@ -79,10 +80,12 @@ function setRobot(ws) {
 function setCV(ws) {
     if (cv) cv.terminate();
     cv = ws;
+    waitingFrame = false;
 }
 
 function unsetCV() {
     cv = null;
+    waitingFrame = false;
 }
 
 function unsetRobot() {
@@ -127,6 +130,11 @@ wss.on('connection', (ws, req) => {
 
             frameId++;
             controllers.forEach((c) => c.send(data));
+
+            if (waitingFrame) {
+                cv?.send(data);
+                waitingFrame = false;
+            }
         }
 
         // TEXT MESSAGE
@@ -152,7 +160,10 @@ wss.on('connection', (ws, req) => {
             }
             // OBJECT DETECTION
             else if (msg.name === 'CV') {
-                cv?.sendMessage(msg);
+                if (cv && !waitingFrame) {
+                    cv.sendMessage(msg);
+                    waitingFrame = true;
+                }
             }
             // MOVE
             else if (msg.name === 'move') {
