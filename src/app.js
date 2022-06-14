@@ -79,8 +79,10 @@ function setRobot(ws) {
 
 function setCV(ws) {
     if (cv) cv.terminate();
-    cv = ws;
+
+    ws.type = CLIENT_CV;
     waitingFrame = false;
+    cv = ws;
 }
 
 function unsetCV() {
@@ -131,6 +133,8 @@ wss.on('connection', (ws, req) => {
             frameId++;
             controllers.forEach((c) => c.send(data));
 
+            console.log(cv.type, waitingFrame);
+
             if (waitingFrame) {
                 waitingFrame = false;
                 cv?.send(data);
@@ -161,8 +165,8 @@ wss.on('connection', (ws, req) => {
             // OBJECT DETECTION
             else if (msg.name === 'CV') {
                 if (cv && !waitingFrame) {
-                    cv.sendMessage(msg);
                     waitingFrame = true;
+                    cv.sendMessage(msg);
                 }
             }
             // MOVE
