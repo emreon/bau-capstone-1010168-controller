@@ -215,6 +215,7 @@ wss.on('connection', (ws, req) => {
 
         if (ws.type === CLIENT_CONTROLLER) removeController(ws);
         else if (ws.type === CLIENT_ROBOT) unsetRobot();
+        else if (ws.type === CLIENT_CV) unsetCV();
     });
 });
 
